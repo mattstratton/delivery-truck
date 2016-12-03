@@ -41,6 +41,7 @@ changed_cookbooks.each do |cookbook|
         # workaround for https://github.com/bbatsov/rubocop/issues/2407
         'USER' => (ENV['USER'] || 'dbuild')
       )
+      live_stream true
       only_if { File.exist?(File.join(cookbook.path, '.rubocop.yml')) }
     end
   end
