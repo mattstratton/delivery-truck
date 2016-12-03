@@ -21,11 +21,10 @@ changed_cookbooks.each do |cookbook|
     command "foodcritic #{foodcritic_fail_tags} #{foodcritic_tags} " \
       "#{foodcritic_excludes} #{cookbook.path}"
   end
-end
-
-# Run cookstyle against any cookbooks that were modified
-if cookstyle_enabled?
-  changed_cookbooks.each do |cookbook|
+  # If cookstyle is enabled in config.json, run cookstyle against any
+  # cookbooks that were modified. Otherwise, run rubocop against any
+  # modified cookbooks, if the cookbook contains a .rubocop.yml file
+  if cookstyle_enabled?
     execute "lint_cookstyle_#{cookbook.name}" do
       command "cookstyle #{cookbook.path}"
       environment(
@@ -35,17 +34,14 @@ if cookstyle_enabled?
       live_stream true
       only_if 'cookstyle -v'
     end
-  end
-end
-
-# Run Rubocop against any cookbooks that were modified
-changed_cookbooks.each do |cookbook|
-  execute "lint_rubocop_#{cookbook.name}" do
-    command "rubocop #{cookbook.path}"
-    environment(
-      # workaround for https://github.com/bbatsov/rubocop/issues/2407
-      'USER' => (ENV['USER'] || 'dbuild')
-    )
-    only_if { File.exist?(File.join(cookbook.path, '.rubocop.yml')) }
+  else
+    execute "lint_rubocop_#{cookbook.name}" do
+      command "rubocop #{cookbook.path}"
+      environment(
+        # workaround for https://github.com/bbatsov/rubocop/issues/2407
+        'USER' => (ENV['USER'] || 'dbuild')
+      )
+      only_if { File.exist?(File.join(cookbook.path, '.rubocop.yml')) }
+    end
   end
 end
